@@ -72,6 +72,27 @@ int	get_length(const u8* pixel)
 	return (pixel[0] + pixel[2]);
 }
 
+// Iterating through rows and colomns to find the header!
+const u8*	find_the_header(const u8* image_data, u32 width, u32 height)
+{
+	// Iterating through rows
+	for (u32 y = 0; y < height; y++)
+	{
+		// Iterating through colomns
+		for (u32 x = 0; x < width; x++)
+		{
+			const u8* pixel = image_data + ((height - 1 - y) * width + x) * 4;
+			if (pixel[0] == 127 && pixel[1] == 188 && pixel[2] == 217)
+				return (pixel);
+		}
+	}
+	return NULL;
+}
+
+void	get_pixel(const u8* pixel, char* buffer)
+{
+	buffer[0] = (char)pixel[0];
+}
 
 int main(int argc, char** argv)
 {
@@ -90,11 +111,20 @@ int main(int argc, char** argv)
 	printf("signature: %.2s\nfile_size: %u\ndata_offset: %u\ninfo_header_size: %u\nwidth: %u\nheight: %u\nplanes: %i\nbit_per_px: %i\ncompression_type: %u\ncompression_size: %u\n", \
 			header->signature, header->file_size, header->data_offset, header->info_header_size, header->width, header->height, header->number_of_planes, header->bit_per_pixel, header->compression_type, header->compressed_image_size);
 
+	// Finding the Header and reading the length
 	const u8*	image_data = (const u8*)file_content.data + header->data_offset;
-	const u8*	length_pixel = image_data; // plus offset of the longest pixel
-	int	length = get_length(length_pixel);
+	const u8*	header_pixel = find_the_header(image_data, header->width, header->height);
+	for (int i = 0; i < 7; i++) // horizontal line
+	{
+		header_pixel += 4; // next pixel in the line
+		printf("%u %u %u\n", header_pixel[0], header_pixel[1], header_pixel[2]);
+	}
 
+	// Reading the length
+	int length = get_length(header_pixel);
 	printf("Message length: %d\n", length);
+
+	// Reading out the message and printing
 
 	return 0;
 }
