@@ -4,6 +4,16 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#include <pthread.h>
+#include <immintrin.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 typedef char i8;
 typedef unsigned char u8;
 typedef unsigned short u16;
@@ -55,6 +65,14 @@ struct file_content   read_entire_file(char* filename)
 	return (struct file_content){file_data, file_size};
 }
 
+// Extract Blue [0] and Red [2]
+// return the sum
+int	get_length(const u8* pixel)
+{
+	return (pixel[0] + pixel[2]);
+}
+
+
 int main(int argc, char** argv)
 {
 	if (argc != 2)
@@ -69,6 +87,14 @@ int main(int argc, char** argv)
 		return 1;
 	}
 	struct bmp_header* header = (struct bmp_header*) file_content.data;
-	printf("signature: %.2s\nfile_size: %u\ndata_offset: %u\ninfo_header_size: %u\nwidth: %u\nheight: %u\nplanes: %i\nbit_per_px: %i\ncompression_type: %u\ncompression_size: %u\n", header->signature, header->file_size, header->data_offset, header->info_header_size, header->width, header->height, header->number_of_planes, header->bit_per_pixel, header->compression_type, header->compressed_image_size);
+	printf("signature: %.2s\nfile_size: %u\ndata_offset: %u\ninfo_header_size: %u\nwidth: %u\nheight: %u\nplanes: %i\nbit_per_px: %i\ncompression_type: %u\ncompression_size: %u\n", \
+			header->signature, header->file_size, header->data_offset, header->info_header_size, header->width, header->height, header->number_of_planes, header->bit_per_pixel, header->compression_type, header->compressed_image_size);
+
+	const u8*	image_data = (const u8*)file_content.data + header->data_offset;
+	const u8*	length_pixel = image_data; // plus offset of the longest pixel
+	int	length = get_length(length_pixel);
+
+	printf("Message length: %d\n", length);
+
 	return 0;
 }
